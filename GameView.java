@@ -53,6 +53,9 @@ public class GameView extends JPanel {
         // Draw aliens
         drawAliens(g);
         
+        // Draw shields
+        drawShields(g);
+        
         // Draw player
         drawPlayer(g);
         
@@ -118,6 +121,33 @@ public class GameView extends JPanel {
                     g.fillRect(x + alienWidth - 14, y + 8, 6, 6);
                     g.setColor(ALIEN_COLOR);
                 }
+            }
+        }
+    }
+    
+    private void drawShields(Graphics g) {
+        int numShields = model.getNumShields();
+        int[] shieldX = model.getShieldX();
+        int[] shieldY = model.getShieldY();
+        int[] shieldWidth = model.getShieldWidth();
+        int[] shieldHeight = model.getShieldHeight();
+        int[] shieldHealth = model.getShieldHealth();
+        
+        for (int i = 0; i < numShields; i++) {
+            if (shieldHealth[i] > 0) {
+                // Color transitions from green (full health) to red (low health)
+                // Health 3 = green, 2 = yellow, 1 = red
+                Color shieldColor;
+                if (shieldHealth[i] == 3) {
+                    shieldColor = new Color(0, 255, 0);
+                } else if (shieldHealth[i] == 2) {
+                    shieldColor = new Color(255, 255, 0);
+                } else {
+                    shieldColor = new Color(139, 0, 0); // Dim red
+                }
+                
+                g.setColor(shieldColor);
+                g.fillRect(shieldX[i], shieldY[i], shieldWidth[i], shieldHeight[i]);
             }
         }
     }

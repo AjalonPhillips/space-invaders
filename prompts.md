@@ -15,3 +15,6 @@ Create a separate file called ModelTester.java with a main method. It should cre
 
 Prompt 6 
 In GameModel.java, add a list of shield rectangles positioned between the player and the alien formation. Reduce a shield's health when hit by a bullet from either side. Remove the shield when health reaches zero. No Swing imports.
+
+Prompt 7
+In GameView.java's paintComponent method only, draw the shields from the model's shield list. Use the shield's health value to choose a color from full green to dim red. Do not call any model mutating methods.
