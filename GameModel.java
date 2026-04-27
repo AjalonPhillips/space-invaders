@@ -30,6 +30,13 @@ public class GameModel {
     private static final int ALIEN_DROP = 20;
     private static final double ALIEN_FIRE_CHANCE = 0.001; // Per alien per tick
     
+    // ==================== Shields ====================
+    private static final int NUM_SHIELDS = 4;
+    private static final int SHIELD_WIDTH = 60;
+    private static final int SHIELD_HEIGHT = 40;
+    private static final int SHIELD_MAX_HEALTH = 3;
+    private static final int SHIELD_Y = BOARD_HEIGHT - 150;
+    
     // ==================== Game State ====================
     private int score;
     private int lives;
@@ -56,6 +63,13 @@ public class GameModel {
     private boolean[] alienBulletActive;
     private int[] alienBulletX;
     private int[] alienBulletY;
+    
+    // ==================== Shields ====================
+    private int[] shieldX;
+    private int[] shieldY;
+    private int[] shieldWidth;
+    private int[] shieldHeight;
+    private int[] shieldHealth;
     
     // ==================== Constructor ====================
     public GameModel() {
@@ -90,6 +104,22 @@ public class GameModel {
         alienBulletY = new int[MAX_ALIEN_BULLETS];
         for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
             alienBulletActive[i] = false;
+        }
+        
+        // Initialize shields
+        shieldX = new int[NUM_SHIELDS];
+        shieldY = new int[NUM_SHIELDS];
+        shieldWidth = new int[NUM_SHIELDS];
+        shieldHeight = new int[NUM_SHIELDS];
+        shieldHealth = new int[NUM_SHIELDS];
+        
+        int shieldSpacing = BOARD_WIDTH / (NUM_SHIELDS + 1);
+        for (int i = 0; i < NUM_SHIELDS; i++) {
+            shieldX[i] = shieldSpacing * (i + 1) - SHIELD_WIDTH / 2;
+            shieldY[i] = SHIELD_Y;
+            shieldWidth[i] = SHIELD_WIDTH;
+            shieldHeight[i] = SHIELD_HEIGHT;
+            shieldHealth[i] = SHIELD_MAX_HEALTH;
         }
     }
     
@@ -253,6 +283,34 @@ public class GameModel {
                 }
             }
         }
+        
+        // Check player bullet vs shields
+        if (playerBulletActive) {
+            for (int i = 0; i < NUM_SHIELDS; i++) {
+                if (shieldHealth[i] > 0 && 
+                    rectIntersect(playerBulletX, playerBulletY, BULLET_WIDTH, BULLET_HEIGHT,
+                                  shieldX[i], shieldY[i], shieldWidth[i], shieldHeight[i])) {
+                    playerBulletActive = false;
+                    shieldHealth[i]--;
+                    return;
+                }
+            }
+        }
+        
+        // Check alien bullets vs shields
+        for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
+            if (alienBulletActive[i]) {
+                for (int s = 0; s < NUM_SHIELDS; s++) {
+                    if (shieldHealth[s] > 0 &&
+                        rectIntersect(alienBulletX[i], alienBulletY[i], BULLET_WIDTH, BULLET_HEIGHT,
+                                      shieldX[s], shieldY[s], shieldWidth[s], shieldHeight[s])) {
+                        alienBulletActive[i] = false;
+                        shieldHealth[s]--;
+                        break;
+                    }
+                }
+            }
+        }
     }
     
     private boolean rectIntersect(int x1, int y1, int w1, int h1,
@@ -328,4 +386,12 @@ public class GameModel {
     
     public int getBoardWidth() { return BOARD_WIDTH; }
     public int getBoardHeight() { return BOARD_HEIGHT; }
+    
+    // ==================== Shield Getters ====================
+    public int getNumShields() { return NUM_SHIELDS; }
+    public int[] getShieldX() { return shieldX; }
+    public int[] getShieldY() { return shieldY; }
+    public int[] getShieldWidth() { return shieldWidth; }
+    public int[] getShieldHeight() { return shieldHeight; }
+    public int[] getShieldHealth() { return shieldHealth; }
 }
