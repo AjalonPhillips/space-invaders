@@ -1,5 +1,6 @@
 import javax.swing.JPanel;
-import javax.swing.JFrame;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 
 /**
@@ -15,14 +16,172 @@ import java.awt.Graphics;
  * - Draw game over / victory screens
  * - Handle visual effects (explosions, etc.)
  * - Provide paintComponent method for Swing rendering
+ * 
+ * NOTE: This class only READS from the model - it never modifies game state.
  */
 public class GameView extends JPanel {
-    // GameView will receive updates from GameController
-    // It will render based on GameModel state
+    private GameModel model;
+    
+    // Colors
+    private static final Color BACKGROUND_COLOR = Color.BLACK;
+    private static final Color PLAYER_COLOR = Color.GREEN;
+    private static final Color ALIEN_COLOR = Color.CYAN;
+    private static final Color PLAYER_BULLET_COLOR = Color.YELLOW;
+    private static final Color ALIEN_BULLET_COLOR = Color.RED;
+    private static final Color TEXT_COLOR = Color.WHITE;
+    
+    // Fonts
+    private static final Font SCORE_FONT = new Font("Arial", Font.BOLD, 20);
+    private static final Font GAME_OVER_FONT = new Font("Arial", Font.BOLD, 48);
+    
+    public GameView(GameModel model) {
+        this.model = model;
+        setBackground(BACKGROUND_COLOR);
+    }
     
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // Rendering logic will go here
+        
+        // Draw background
+        g.setColor(BACKGROUND_COLOR);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        // Draw score and lives (top of screen)
+        drawHUD(g);
+        
+        // Draw aliens
+        drawAliens(g);
+        
+        // Draw player
+        drawPlayer(g);
+        
+        // Draw bullets
+        drawBullets(g);
+        
+        // Draw game over / victory message
+        if (model.isGameOver() || model.isGameWon()) {
+            drawGameOverMessage(g);
+        }
+    }
+    
+    private void drawHUD(Graphics g) {
+        g.setColor(TEXT_COLOR);
+        g.setFont(SCORE_FONT);
+        
+        // Draw score on left
+        g.drawString("Score: " + model.getScore(), 20, 30);
+        
+        // Draw lives on right
+        g.drawString("Lives: " + model.getLives(), getWidth() - 120, 30);
+    }
+    
+    private void drawPlayer(Graphics g) {
+        g.setColor(PLAYER_COLOR);
+        int x = model.getPlayerX();
+        int y = model.getPlayerY();
+        int w = model.getPlayerWidth();
+        int h = model.getPlayerHeight();
+        
+        // Draw player as a simple shape (triangle-ish)
+        int[] xPoints = {
+            x + w / 2,      // Top center
+            x,              // Bottom left
+            x + w           // Bottom right
+        };
+        int[] yPoints = {
+            y,              // Top
+            y + h,          // Bottom left
+            y + h           // Bottom right
+        };
+        g.fillPolygon(xPoints, yPoints, 3);
+    }
+    
+    private void drawAliens(Graphics g) {
+        g.setColor(ALIEN_COLOR);
+        boolean[][] aliens = model.getAliens();
+        int alienWidth = model.getAlienWidth();
+        int alienHeight = model.getAlienHeight();
+        
+        for (int row = 0; row < aliens.length; row++) {
+            for (int col = 0; col < aliens[row].length; col++) {
+                if (aliens[row][col]) {
+                    int x = getAlienX(col);
+                    int y = getAlienY(row);
+                    
+                    // Draw alien as a rectangle with some character
+                    g.fillRect(x, y, alienWidth, alienHeight);
+                    
+                    // Add simple eyes
+                    g.setColor(BACKGROUND_COLOR);
+                    g.fillRect(x + 8, y + 8, 6, 6);
+                    g.fillRect(x + alienWidth - 14, y + 8, 6, 6);
+                    g.setColor(ALIEN_COLOR);
+                }
+            }
+        }
+    }
+    
+    private void drawBullets(Graphics g) {
+        // Draw player bullet
+        if (model.isPlayerBulletActive()) {
+            g.setColor(PLAYER_BULLET_COLOR);
+            int x = model.getPlayerBulletX();
+            int y = model.getPlayerBulletY();
+            int w = model.getBulletWidth();
+            int h = model.getBulletHeight();
+            g.fillRect(x, y, w, h);
+        }
+        
+        // Draw alien bullets
+        g.setColor(ALIEN_BULLET_COLOR);
+        boolean[] active = model.getAlienBulletActive();
+        int[] bulletX = model.getAlienBulletX();
+        int[] bulletY = model.getAlienBulletY();
+        int w = model.getBulletWidth();
+        int h = model.getBulletHeight();
+        
+        for (int i = 0; i < active.length; i++) {
+            if (active[i]) {
+                g.fillRect(bulletX[i], bulletY[i], w, h);
+            }
+        }
+    }
+    
+    private void drawGameOverMessage(Graphics g) {
+        g.setColor(TEXT_COLOR);
+        g.setFont(GAME_OVER_FONT);
+        
+        String message;
+        if (model.isGameWon()) {
+            message = "YOU WIN!";
+        } else {
+            message = "GAME OVER";
+        }
+        
+        // Center the message
+        int messageWidth = g.getFontMetrics().stringWidth(message);
+        int x = (getWidth() - messageWidth) / 2;
+        int y = getHeight() / 2;
+        
+        g.drawString(message, x, y);
+        
+        // Draw final score
+        g.setFont(SCORE_FONT);
+        String finalScore = "Final Score: " + model.getScore();
+        int scoreWidth = g.getFontMetrics().stringWidth(finalScore);
+        int scoreX = (getWidth() - scoreWidth) / 2;
+        g.drawString(finalScore, scoreX, y + 40);
+    }
+    
+    // Helper methods to calculate alien positions (same as model)
+    private int getAlienX(int col) {
+        int padding = 15;
+        return padding + col * (model.getAlienWidth() + padding);
+    }
+    
+    private int getAlienY(int row) {
+        int padding = 15;
+        return padding + row * (model.getAlienHeight() + padding) + 50; // +50 for top margin
     }
 }
