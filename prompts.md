@@ -18,3 +18,6 @@ In GameModel.java, add a list of shield rectangles positioned between the player
 
 Prompt 7
 In GameView.java's paintComponent method only, draw the shields from the model's shield list. Use the shield's health value to choose a color from full green to dim red. Do not call any model mutating methods.
+
+Prompt 8
+In GameModel.java, increase the alien movement speed each time an alien is destroyed. Expose a method the Controller can call to get the current recommended timer interval. Do not touch the View.

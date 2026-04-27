@@ -29,6 +29,9 @@ public class GameModel {
     private static final int BULLET_SPEED = 10;
     private static final int ALIEN_DROP = 20;
     private static final double ALIEN_FIRE_CHANCE = 0.001; // Per alien per tick
+    private static final int BASE_TIMER_INTERVAL = 50; // Base interval in ms
+    private static final int MIN_TIMER_INTERVAL = 10; // Fastest interval
+    private static final double SPEED_INCREASE_FACTOR = 0.95; // Multiply interval by this each alien hit
     
     // ==================== Shields ====================
     private static final int NUM_SHIELDS = 4;
@@ -52,6 +55,7 @@ public class GameModel {
     private int alienDirection; // 1 = right, -1 = left
     private int alienMinX;
     private int alienMaxX;
+    private int aliensDestroyed = 0; // Track for speed increase
     
     // ==================== Player Bullet ====================
     private boolean playerBulletActive;
@@ -248,6 +252,7 @@ public class GameModel {
                             // Hit!
                             aliens[row][col] = false;
                             playerBulletActive = false;
+                            aliensDestroyed++;
                             score += (ALIEN_ROWS - row) * 10; // Higher rows = more points
                             checkWinCondition();
                             return;
@@ -394,4 +399,14 @@ public class GameModel {
     public int[] getShieldWidth() { return shieldWidth; }
     public int[] getShieldHeight() { return shieldHeight; }
     public int[] getShieldHealth() { return shieldHealth; }
+    
+    // ==================== Timer Interval ====================
+    /**
+     * Returns the recommended timer interval in milliseconds.
+     * Decreases as more aliens are destroyed, making the game faster.
+     */
+    public int getTimerInterval() {
+        int interval = (int)(BASE_TIMER_INTERVAL * Math.pow(SPEED_INCREASE_FACTOR, aliensDestroyed));
+        return Math.max(interval, MIN_TIMER_INTERVAL);
+    }
 }
