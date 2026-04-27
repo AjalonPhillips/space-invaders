@@ -21,3 +21,6 @@ In GameView.java's paintComponent method only, draw the shields from the model's
 
 Prompt 8
 In GameModel.java, increase the alien movement speed each time an alien is destroyed. Expose a method the Controller can call to get the current recommended timer interval. Do not touch the View.
+
+Prompt 9 
+In modelTester.java, how can I fix some of these errors starting on line 192?

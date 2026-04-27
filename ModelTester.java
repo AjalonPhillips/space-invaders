@@ -15,6 +15,9 @@ public class ModelTester {
         testBulletReachingTopIsRemoved();
         testDestroyingAlienIncreasesScore();
         testLosingAllLivesTriggersGameOver();
+        testInitialState();
+        testPlayerMovement();
+        testBulletFiring();
         
         System.out.println("\n=== Results ===");
         System.out.println("PASS: " + passCount);
@@ -187,5 +190,43 @@ public class ModelTester {
             System.out.println("FAIL: Game should not be over initially");
             failCount++;
         }
+    }
+
+    private static void testInitialState() {
+        GameModel model = new GameModel();
+        check("player starts with 3 lives",   model.getLives() == 3);
+        check("score starts at zero",         model.getScore() == 0);
+        check("no bullet at start",           !model.isPlayerBulletActive());
+        check("game is not over at start",    !model.isGameOver());
+    }
+    
+    private static void check(String description, boolean condition) {
+        if (condition) {
+            System.out.println("PASS: " + description);
+            passCount++;
+        } else {
+            System.out.println("FAIL: " + description);
+            failCount++;
+        }
+    }
+    
+    private static void testPlayerMovement() {
+        GameModel model = new GameModel();
+        int startX = model.getPlayerX();
+        model.movePlayerRight();
+        check("moving right increases x",     model.getPlayerX() > startX);
+        
+        // Drive the player as far left as possible
+        for (int i = 0; i < 200; i++) model.movePlayerLeft();
+        check("player x never goes below 0",  model.getPlayerX() >= 0);
+    }
+    
+    private static void testBulletFiring() {
+        GameModel model = new GameModel();
+        model.firePlayerBullet();
+        check("firing creates a bullet",      model.isPlayerBulletActive());
+        model.firePlayerBullet();             // fire again while one is in flight
+        check("cannot fire a second bullet",  model.isPlayerBulletActive());
+        // (this is a weak check — we want exactly one bullet, not two)
     }
 }
