@@ -5,7 +5,7 @@
 public class ModelTester {
     private static int passCount = 0;
     private static int failCount = 0;
-    
+     
     public static void main(String[] args) {
         System.out.println("=== GameModel Unit Tests ===\n");
         

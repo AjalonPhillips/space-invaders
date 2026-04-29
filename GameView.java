@@ -3,7 +3,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
-
+ 
 /**
  * GameView - Handles all rendering and display.
  * This class extends JPanel and is hosted in a JFrame.
@@ -159,27 +159,30 @@ public class GameView extends JPanel {
     }
     
     private void drawBullets(Graphics g) {
-        // Draw player bullet
-        if (model.isPlayerBulletActive()) {
-            g.setColor(PLAYER_BULLET_COLOR);
-            int x = model.getPlayerBulletX();
-            int y = model.getPlayerBulletY();
-            int w = model.getBulletWidth();
-            int h = model.getBulletHeight();
-            g.fillRect(x, y, w, h);
+        int w = model.getBulletWidth();
+        int h = model.getBulletHeight();
+        
+        // Draw player bullets
+        g.setColor(PLAYER_BULLET_COLOR);
+        boolean[] playerActive = model.getPlayerBulletActive();
+        int[] playerBulletX = model.getPlayerBulletX();
+        int[] playerBulletY = model.getPlayerBulletY();
+        
+        for (int i = 0; i < playerActive.length; i++) {
+            if (playerActive[i]) {
+                g.fillRect(playerBulletX[i], playerBulletY[i], w, h);
+            }
         }
         
         // Draw alien bullets
         g.setColor(ALIEN_BULLET_COLOR);
-        boolean[] active = model.getAlienBulletActive();
-        int[] bulletX = model.getAlienBulletX();
-        int[] bulletY = model.getAlienBulletY();
-        int w = model.getBulletWidth();
-        int h = model.getBulletHeight();
+        boolean[] alienActive = model.getAlienBulletActive();
+        int[] alienBulletX = model.getAlienBulletX();
+        int[] alienBulletY = model.getAlienBulletY();
         
-        for (int i = 0; i < active.length; i++) {
-            if (active[i]) {
-                g.fillRect(bulletX[i], bulletY[i], w, h);
+        for (int i = 0; i < alienActive.length; i++) {
+            if (alienActive[i]) {
+                g.fillRect(alienBulletX[i], alienBulletY[i], w, h);
             }
         }
     }
@@ -208,6 +211,12 @@ public class GameView extends JPanel {
         int scoreWidth = g.getFontMetrics().stringWidth(finalScore);
         int scoreX = (getWidth() - scoreWidth) / 2;
         g.drawString(finalScore, scoreX, y + 40);
+        
+        // Draw restart instruction
+        String restartText = "Press R or ENTER to restart";
+        int restartWidth = g.getFontMetrics().stringWidth(restartText);
+        int restartX = (getWidth() - restartWidth) / 2;
+        g.drawString(restartText, restartX, y + 80);
     }
     
     // Helper methods to calculate alien positions (same as model)

@@ -10,22 +10,22 @@
  * - Manage game entities (aliens, player, bullets, obstacles)
  * - Provide game loop update logic
  * - Handle win/lose conditions
- */
+ */ 
 public class GameModel {
     // ==================== Constants ====================
     private static final int BOARD_WIDTH = 800;
     private static final int BOARD_HEIGHT = 600;
     private static final int ALIEN_ROWS = 5;
     private static final int ALIEN_COLS = 11;
-    private static final int ALIEN_WIDTH = 40;
-    private static final int ALIEN_HEIGHT = 30;
+    private static final int ALIEN_WIDTH = 30;
+    private static final int ALIEN_HEIGHT = 20;
     private static final int ALIEN_PADDING = 15;
     private static final int PLAYER_WIDTH = 50;
     private static final int PLAYER_HEIGHT = 30;
     private static final int BULLET_WIDTH = 5;
     private static final int BULLET_HEIGHT = 15;
     private static final int PLAYER_SPEED = 8;
-    private static final int ALIEN_SPEED = 5;
+    private static final int ALIEN_SPEED = 1;
     private static final int BULLET_SPEED = 10;
     private static final int ALIEN_DROP = 20;
     private static final double ALIEN_FIRE_CHANCE = 0.001; // Per alien per tick
@@ -45,6 +45,7 @@ public class GameModel {
     private int lives;
     private boolean gameOver;
     private boolean gameWon;
+    private boolean paused;
     
     // ==================== Player ====================
     private int playerX;
@@ -59,9 +60,10 @@ public class GameModel {
     private int aliensDestroyed = 0; // Track for speed increase
     
     // ==================== Player Bullet ====================
-    private boolean playerBulletActive;
-    private int playerBulletX;
-    private int playerBulletY;
+    private static final int MAX_PLAYER_BULLETS = 3;
+    private boolean[] playerBulletActive;
+    private int[] playerBulletX;
+    private int[] playerBulletY;
     
     // ==================== Alien Bullets ====================
     private static final int MAX_ALIEN_BULLETS = 10;
@@ -99,10 +101,13 @@ public class GameModel {
         alienMaxX = BOARD_WIDTH - ALIEN_PADDING - ALIEN_WIDTH;
         alienY = ALIEN_VERTICAL_MARGIN;
         
-        // Initialize player bullet (inactive)
-        playerBulletActive = false;
-        playerBulletX = 0;
-        playerBulletY = 0;
+        // Initialize player bullets (inactive)
+        playerBulletActive = new boolean[MAX_PLAYER_BULLETS];
+        playerBulletX = new int[MAX_PLAYER_BULLETS];
+        playerBulletY = new int[MAX_PLAYER_BULLETS];
+        for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
+            playerBulletActive[i] = false;
+        }
         
         // Initialize alien bullets
         alienBulletActive = new boolean[MAX_ALIEN_BULLETS];
@@ -148,10 +153,13 @@ public class GameModel {
     
     // ==================== Player Shooting ====================
     public void firePlayerBullet() {
-        if (!playerBulletActive) {
-            playerBulletActive = true;
-            playerBulletX = playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2;
-            playerBulletY = playerY;
+        for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
+            if (!playerBulletActive[i]) {
+                playerBulletActive[i] = true;
+                playerBulletX[i] = playerX + PLAYER_WIDTH / 2 - BULLET_WIDTH / 2;
+                playerBulletY[i] = playerY;
+                break; // Fire one bullet per key press
+            }
         }
     }
     
@@ -187,16 +195,6 @@ public class GameModel {
             int currentSpeed = (int)(ALIEN_SPEED * speedMultiplier);
             alienMinX += alienDirection * currentSpeed;
             alienMaxX += alienDirection * currentSpeed;
-            
-            // Clamp to screen bounds
-            if (alienMinX < 0) {
-                alienMinX = 0;
-                alienMaxX = alienMinX + BOARD_WIDTH - ALIEN_PADDING * 2 - ALIEN_WIDTH;
-            }
-            if (alienMaxX > BOARD_WIDTH - ALIEN_WIDTH) {
-                alienMaxX = BOARD_WIDTH - ALIEN_WIDTH;
-                alienMinX = alienMaxX - (BOARD_WIDTH - ALIEN_PADDING * 2 - ALIEN_WIDTH);
-            }
         }
     }
     
@@ -230,10 +228,12 @@ public class GameModel {
     
     // ==================== Bullet Updates ====================
     private void updatePlayerBullet() {
-        if (playerBulletActive) {
-            playerBulletY -= BULLET_SPEED;
-            if (playerBulletY < 0) {
-                playerBulletActive = false;
+        for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
+            if (playerBulletActive[i]) {
+                playerBulletY[i] -= BULLET_SPEED;
+                if (playerBulletY[i] < 0) {
+                    playerBulletActive[i] = false;
+                }
             }
         }
     }
@@ -251,23 +251,25 @@ public class GameModel {
     
     // ==================== Collision Detection ====================
     private void checkCollisions() {
-        // Check player bullet vs aliens
-        if (playerBulletActive) {
-            for (int row = 0; row < ALIEN_ROWS; row++) {
-                for (int col = 0; col < ALIEN_COLS; col++) {
-                    if (aliens[row][col]) {
-                        int alienX = getAlienX(col);
-                        int alienY = getAlienY(row);
-                        
-                        if (rectIntersect(playerBulletX, playerBulletY, BULLET_WIDTH, BULLET_HEIGHT,
-                                          alienX, alienY, ALIEN_WIDTH, ALIEN_HEIGHT)) {
-                            // Hit!
-                            aliens[row][col] = false;
-                            playerBulletActive = false;
-                            aliensDestroyed++;
-                            score += (ALIEN_ROWS - row) * 10; // Higher rows = more points
-                            checkWinCondition();
-                            return;
+        // Check player bullets vs aliens
+        for (int b = 0; b < MAX_PLAYER_BULLETS; b++) {
+            if (playerBulletActive[b]) {
+                for (int row = 0; row < ALIEN_ROWS; row++) {
+                    for (int col = 0; col < ALIEN_COLS; col++) {
+                        if (aliens[row][col]) {
+                            int alienX = getAlienX(col);
+                            int alienY = getAlienY(row);
+                            
+                            if (rectIntersect(playerBulletX[b], playerBulletY[b], BULLET_WIDTH, BULLET_HEIGHT,
+                                              alienX, alienY, ALIEN_WIDTH, ALIEN_HEIGHT)) {
+                                // Hit!
+                                aliens[row][col] = false;
+                                playerBulletActive[b] = false;
+                                aliensDestroyed++;
+                                score += (ALIEN_ROWS - row) * 10; // Higher rows = more points
+                                checkWinCondition();
+                                break;
+                            }
                         }
                     }
                 }
@@ -301,15 +303,17 @@ public class GameModel {
             }
         }
         
-        // Check player bullet vs shields
-        if (playerBulletActive) {
-            for (int i = 0; i < NUM_SHIELDS; i++) {
-                if (shieldHealth[i] > 0 && 
-                    rectIntersect(playerBulletX, playerBulletY, BULLET_WIDTH, BULLET_HEIGHT,
-                                  shieldX[i], shieldY[i], shieldWidth[i], shieldHeight[i])) {
-                    playerBulletActive = false;
-                    shieldHealth[i]--;
-                    return;
+        // Check player bullets vs shields
+        for (int b = 0; b < MAX_PLAYER_BULLETS; b++) {
+            if (playerBulletActive[b]) {
+                for (int i = 0; i < NUM_SHIELDS; i++) {
+                    if (shieldHealth[i] > 0 && 
+                        rectIntersect(playerBulletX[b], playerBulletY[b], BULLET_WIDTH, BULLET_HEIGHT,
+                                      shieldX[i], shieldY[i], shieldWidth[i], shieldHeight[i])) {
+                        playerBulletActive[b] = false;
+                        shieldHealth[i]--;
+                        break;
+                    }
                 }
             }
         }
@@ -354,7 +358,7 @@ public class GameModel {
     
     // ==================== Main Update Method ====================
     public void update() {
-        if (gameOver || gameWon) {
+        if (gameOver || gameWon || paused) {
             return;
         }
         
@@ -363,6 +367,55 @@ public class GameModel {
         updatePlayerBullet();
         updateAlienBullets();
         checkCollisions();
+    }
+    
+    // ==================== Pause/Resume ====================
+    public void togglePause() {
+        if (!gameOver && !gameWon) {
+            paused = !paused;
+        }
+    }
+    
+    public boolean isPaused() { return paused; }
+    
+    // ==================== Restart Game ====================
+    public void restart() {
+        score = 0;
+        lives = 3;
+        gameOver = false;
+        gameWon = false;
+        paused = false;
+        aliensDestroyed = 0;
+        
+        // Reset player position
+        playerX = BOARD_WIDTH / 2 - PLAYER_WIDTH / 2;
+        playerY = BOARD_HEIGHT - PLAYER_HEIGHT - 10;
+        
+        // Reset aliens
+        for (int row = 0; row < ALIEN_ROWS; row++) {
+            for (int col = 0; col < ALIEN_COLS; col++) {
+                aliens[row][col] = true;
+            }
+        }
+        alienDirection = 1;
+        alienMinX = ALIEN_PADDING;
+        alienMaxX = BOARD_WIDTH - ALIEN_PADDING - ALIEN_WIDTH;
+        alienY = ALIEN_VERTICAL_MARGIN;
+        
+        // Reset player bullets
+        for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
+            playerBulletActive[i] = false;
+        }
+        
+        // Reset alien bullets
+        for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
+            alienBulletActive[i] = false;
+        }
+        
+        // Reset shields
+        for (int i = 0; i < NUM_SHIELDS; i++) {
+            shieldHealth[i] = SHIELD_MAX_HEALTH;
+        }
     }
     
     // ==================== Helper Methods ====================
@@ -387,9 +440,10 @@ public class GameModel {
     public int getAlienY() { return alienY; }
     public int getAlienMinX() { return alienMinX; }
     
-    public boolean isPlayerBulletActive() { return playerBulletActive; }
-    public int getPlayerBulletX() { return playerBulletX; }
-    public int getPlayerBulletY() { return playerBulletY; }
+    public boolean[] getPlayerBulletActive() { return playerBulletActive; }
+    public int[] getPlayerBulletX() { return playerBulletX; }
+    public int[] getPlayerBulletY() { return playerBulletY; }
+    public int getMaxPlayerBullets() { return MAX_PLAYER_BULLETS; }
     public int getBulletWidth() { return BULLET_WIDTH; }
     public int getBulletHeight() { return BULLET_HEIGHT; }
     
