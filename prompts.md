@@ -38,3 +38,7 @@ Prompt 12
 Can you add a restart option at the end of every game?
 
 Prompt 13
+Can you make the esc key not only pause the game but show a menu the offers the option to resume (esc key)  or restart (R key)? In additon can you put in the top center of the screen in between the points and lives couter, ESC to pause?
+
+Prompt 14
+Lastly can you make it so the player bullets dont collide with the shields?

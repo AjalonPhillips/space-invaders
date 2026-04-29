@@ -10,7 +10,7 @@
  * - Manage game entities (aliens, player, bullets, obstacles)
  * - Provide game loop update logic
  * - Handle win/lose conditions
- */ 
+ */
 public class GameModel {
     // ==================== Constants ====================
     private static final int BOARD_WIDTH = 800;
@@ -32,25 +32,25 @@ public class GameModel {
     private static final int BASE_TIMER_INTERVAL = 50; // Base interval in ms
     private static final int MIN_TIMER_INTERVAL = 10; // Fastest interval
     private static final double SPEED_INCREASE_FACTOR = 0.95; // Multiply interval by this each alien hit
-    private static final int ALIEN_VERTICAL_MARGIN = 50; // Top margin for alien formation    
+    private static final int ALIEN_VERTICAL_MARGIN = 50; // Top margin for alien formation
     // ==================== Shields ====================
     private static final int NUM_SHIELDS = 4;
     private static final int SHIELD_WIDTH = 60;
     private static final int SHIELD_HEIGHT = 40;
     private static final int SHIELD_MAX_HEALTH = 3;
     private static final int SHIELD_Y = BOARD_HEIGHT - 150;
-    
+
     // ==================== Game State ====================
     private int score;
     private int lives;
     private boolean gameOver;
     private boolean gameWon;
     private boolean paused;
-    
+
     // ==================== Player ====================
     private int playerX;
     private int playerY;
-    
+
     // ==================== Aliens ====================
     private boolean[][] aliens; // [row][col]
     private int alienDirection; // 1 = right, -1 = left
@@ -58,37 +58,37 @@ public class GameModel {
     private int alienMaxX;
     private int alienY; // Vertical position of the alien formation
     private int aliensDestroyed = 0; // Track for speed increase
-    
+
     // ==================== Player Bullet ====================
     private static final int MAX_PLAYER_BULLETS = 3;
     private boolean[] playerBulletActive;
     private int[] playerBulletX;
     private int[] playerBulletY;
-    
+
     // ==================== Alien Bullets ====================
     private static final int MAX_ALIEN_BULLETS = 10;
     private boolean[] alienBulletActive;
     private int[] alienBulletX;
     private int[] alienBulletY;
-    
+
     // ==================== Shields ====================
     private int[] shieldX;
     private int[] shieldY;
     private int[] shieldWidth;
     private int[] shieldHeight;
     private int[] shieldHealth;
-    
+
     // ==================== Constructor ====================
     public GameModel() {
         score = 0;
         lives = 3;
         gameOver = false;
         gameWon = false;
-        
+
         // Initialize player position (bottom center)
         playerX = BOARD_WIDTH / 2 - PLAYER_WIDTH / 2;
         playerY = BOARD_HEIGHT - PLAYER_HEIGHT - 10;
-        
+
         // Initialize aliens
         aliens = new boolean[ALIEN_ROWS][ALIEN_COLS];
         for (int row = 0; row < ALIEN_ROWS; row++) {
@@ -100,7 +100,7 @@ public class GameModel {
         alienMinX = ALIEN_PADDING;
         alienMaxX = BOARD_WIDTH - ALIEN_PADDING - ALIEN_WIDTH;
         alienY = ALIEN_VERTICAL_MARGIN;
-        
+
         // Initialize player bullets (inactive)
         playerBulletActive = new boolean[MAX_PLAYER_BULLETS];
         playerBulletX = new int[MAX_PLAYER_BULLETS];
@@ -108,7 +108,7 @@ public class GameModel {
         for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
             playerBulletActive[i] = false;
         }
-        
+
         // Initialize alien bullets
         alienBulletActive = new boolean[MAX_ALIEN_BULLETS];
         alienBulletX = new int[MAX_ALIEN_BULLETS];
@@ -116,14 +116,14 @@ public class GameModel {
         for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
             alienBulletActive[i] = false;
         }
-        
+
         // Initialize shields
         shieldX = new int[NUM_SHIELDS];
         shieldY = new int[NUM_SHIELDS];
         shieldWidth = new int[NUM_SHIELDS];
         shieldHeight = new int[NUM_SHIELDS];
         shieldHealth = new int[NUM_SHIELDS];
-        
+
         int shieldSpacing = BOARD_WIDTH / (NUM_SHIELDS + 1);
         for (int i = 0; i < NUM_SHIELDS; i++) {
             shieldX[i] = shieldSpacing * (i + 1) - SHIELD_WIDTH / 2;
@@ -133,15 +133,16 @@ public class GameModel {
             shieldHealth[i] = SHIELD_MAX_HEALTH;
         }
     }
-    
+
     // ==================== Player Movement ====================
     public void movePlayerLeft() {
         if (playerX > 0) {
             playerX -= PLAYER_SPEED;
-            if (playerX < 0) playerX = 0;
+            if (playerX < 0)
+                playerX = 0;
         }
     }
-    
+
     public void movePlayerRight() {
         if (playerX < BOARD_WIDTH - PLAYER_WIDTH) {
             playerX += PLAYER_SPEED;
@@ -150,7 +151,7 @@ public class GameModel {
             }
         }
     }
-    
+
     // ==================== Player Shooting ====================
     public void firePlayerBullet() {
         for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
@@ -162,7 +163,7 @@ public class GameModel {
             }
         }
     }
-    
+
     // ==================== Alien Movement ====================
     private boolean shouldAliensMoveDown() {
         // Check if any alien has reached the screen edge
@@ -183,7 +184,7 @@ public class GameModel {
         }
         return false;
     }
-    
+
     private void moveAliens() {
         if (shouldAliensMoveDown()) {
             alienDirection *= -1; // Reverse direction
@@ -191,13 +192,13 @@ public class GameModel {
         } else {
             // Move aliens horizontally based on direction and speed
             // Speed increases as aliens get closer to the bottom
-            double speedMultiplier = 1.0 + (alienY / (double)BOARD_HEIGHT) * 2;
-            int currentSpeed = (int)(ALIEN_SPEED * speedMultiplier);
+            double speedMultiplier = 1.0 + (alienY / (double) BOARD_HEIGHT) * 2;
+            int currentSpeed = (int) (ALIEN_SPEED * speedMultiplier);
             alienMinX += alienDirection * currentSpeed;
             alienMaxX += alienDirection * currentSpeed;
         }
     }
-    
+
     // ==================== Alien Shooting ====================
     private void alienShoot() {
         // Find all living aliens
@@ -205,11 +206,11 @@ public class GameModel {
         for (int row = 0; row < ALIEN_ROWS; row++) {
             for (int col = 0; col < ALIEN_COLS; col++) {
                 if (aliens[row][col]) {
-                    livingAliens.add(new int[]{row, col});
+                    livingAliens.add(new int[] { row, col });
                 }
             }
         }
-        
+
         // Random chance for each alien to fire
         for (int[] alien : livingAliens) {
             if (Math.random() < ALIEN_FIRE_CHANCE) {
@@ -225,7 +226,7 @@ public class GameModel {
             }
         }
     }
-    
+
     // ==================== Bullet Updates ====================
     private void updatePlayerBullet() {
         for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
@@ -237,7 +238,7 @@ public class GameModel {
             }
         }
     }
-    
+
     private void updateAlienBullets() {
         for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
             if (alienBulletActive[i]) {
@@ -248,7 +249,7 @@ public class GameModel {
             }
         }
     }
-    
+
     // ==================== Collision Detection ====================
     private void checkCollisions() {
         // Check player bullets vs aliens
@@ -259,9 +260,9 @@ public class GameModel {
                         if (aliens[row][col]) {
                             int alienX = getAlienX(col);
                             int alienY = getAlienY(row);
-                            
+
                             if (rectIntersect(playerBulletX[b], playerBulletY[b], BULLET_WIDTH, BULLET_HEIGHT,
-                                              alienX, alienY, ALIEN_WIDTH, ALIEN_HEIGHT)) {
+                                    alienX, alienY, ALIEN_WIDTH, ALIEN_HEIGHT)) {
                                 // Hit!
                                 aliens[row][col] = false;
                                 playerBulletActive[b] = false;
@@ -275,12 +276,12 @@ public class GameModel {
                 }
             }
         }
-        
+
         // Check alien bullets vs player
         for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
             if (alienBulletActive[i]) {
                 if (rectIntersect(alienBulletX[i], alienBulletY[i], BULLET_WIDTH, BULLET_HEIGHT,
-                                  playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT)) {
+                        playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT)) {
                     // Player hit!
                     alienBulletActive[i] = false;
                     lives--;
@@ -290,7 +291,7 @@ public class GameModel {
                 }
             }
         }
-        
+
         // Check if aliens reached the bottom
         for (int col = 0; col < ALIEN_COLS; col++) {
             for (int row = 0; row < ALIEN_ROWS; row++) {
@@ -302,29 +303,15 @@ public class GameModel {
                 }
             }
         }
-        
-        // Check player bullets vs shields
-        for (int b = 0; b < MAX_PLAYER_BULLETS; b++) {
-            if (playerBulletActive[b]) {
-                for (int i = 0; i < NUM_SHIELDS; i++) {
-                    if (shieldHealth[i] > 0 && 
-                        rectIntersect(playerBulletX[b], playerBulletY[b], BULLET_WIDTH, BULLET_HEIGHT,
-                                      shieldX[i], shieldY[i], shieldWidth[i], shieldHeight[i])) {
-                        playerBulletActive[b] = false;
-                        shieldHealth[i]--;
-                        break;
-                    }
-                }
-            }
-        }
-        
+
+
         // Check alien bullets vs shields
         for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
             if (alienBulletActive[i]) {
                 for (int s = 0; s < NUM_SHIELDS; s++) {
                     if (shieldHealth[s] > 0 &&
-                        rectIntersect(alienBulletX[i], alienBulletY[i], BULLET_WIDTH, BULLET_HEIGHT,
-                                      shieldX[s], shieldY[s], shieldWidth[s], shieldHeight[s])) {
+                            rectIntersect(alienBulletX[i], alienBulletY[i], BULLET_WIDTH, BULLET_HEIGHT,
+                                    shieldX[s], shieldY[s], shieldWidth[s], shieldHeight[s])) {
                         alienBulletActive[i] = false;
                         shieldHealth[s]--;
                         break;
@@ -333,13 +320,13 @@ public class GameModel {
             }
         }
     }
-    
+
     private boolean rectIntersect(int x1, int y1, int w1, int h1,
-                                   int x2, int y2, int w2, int h2) {
+            int x2, int y2, int w2, int h2) {
         return x1 < x2 + w2 && x1 + w1 > x2 &&
-               y1 < y2 + h2 && y1 + h1 > y2;
+                y1 < y2 + h2 && y1 + h1 > y2;
     }
-    
+
     // ==================== Win/Lose Conditions ====================
     public void checkWinCondition() {
         boolean anyAliensLeft = false;
@@ -355,29 +342,31 @@ public class GameModel {
             gameWon = true;
         }
     }
-    
+
     // ==================== Main Update Method ====================
     public void update() {
         if (gameOver || gameWon || paused) {
             return;
         }
-        
+
         moveAliens();
         alienShoot();
         updatePlayerBullet();
         updateAlienBullets();
         checkCollisions();
     }
-    
+
     // ==================== Pause/Resume ====================
     public void togglePause() {
         if (!gameOver && !gameWon) {
             paused = !paused;
         }
     }
-    
-    public boolean isPaused() { return paused; }
-    
+
+    public boolean isPaused() {
+        return paused;
+    }
+
     // ==================== Restart Game ====================
     public void restart() {
         score = 0;
@@ -386,11 +375,11 @@ public class GameModel {
         gameWon = false;
         paused = false;
         aliensDestroyed = 0;
-        
+
         // Reset player position
         playerX = BOARD_WIDTH / 2 - PLAYER_WIDTH / 2;
         playerY = BOARD_HEIGHT - PLAYER_HEIGHT - 10;
-        
+
         // Reset aliens
         for (int row = 0; row < ALIEN_ROWS; row++) {
             for (int col = 0; col < ALIEN_COLS; col++) {
@@ -401,80 +390,180 @@ public class GameModel {
         alienMinX = ALIEN_PADDING;
         alienMaxX = BOARD_WIDTH - ALIEN_PADDING - ALIEN_WIDTH;
         alienY = ALIEN_VERTICAL_MARGIN;
-        
+
         // Reset player bullets
         for (int i = 0; i < MAX_PLAYER_BULLETS; i++) {
             playerBulletActive[i] = false;
         }
-        
+
         // Reset alien bullets
         for (int i = 0; i < MAX_ALIEN_BULLETS; i++) {
             alienBulletActive[i] = false;
         }
-        
+
         // Reset shields
         for (int i = 0; i < NUM_SHIELDS; i++) {
             shieldHealth[i] = SHIELD_MAX_HEALTH;
         }
     }
-    
+
     // ==================== Helper Methods ====================
-    private int getAlienX(int col) {
+    public int getAlienX(int col) {
         return alienMinX + col * (ALIEN_WIDTH + ALIEN_PADDING);
     }
-    
-    private int getAlienY(int row) {
+
+    public int getAlienY(int row) {
         return alienY + row * (ALIEN_HEIGHT + ALIEN_PADDING);
     }
-    
+
+    public int getAlienPadding() {
+        return ALIEN_PADDING;
+    }
+
+    public boolean isAnyPlayerBulletActive() {
+        for (boolean active : playerBulletActive) {
+            if (active) return true;
+        }
+        return false;
+    }
+
     // ==================== Getters ====================
-    public int getPlayerX() { return playerX; }
-    public int getPlayerY() { return playerY; }
-    public int getPlayerWidth() { return PLAYER_WIDTH; }
-    public int getPlayerHeight() { return PLAYER_HEIGHT; }
-    
-    public boolean[][] getAliens() { return aliens; }
-    public int getAlienWidth() { return ALIEN_WIDTH; }
-    public int getAlienHeight() { return ALIEN_HEIGHT; }
-    public int getAlienDirection() { return alienDirection; }
-    public int getAlienY() { return alienY; }
-    public int getAlienMinX() { return alienMinX; }
-    
-    public boolean[] getPlayerBulletActive() { return playerBulletActive; }
-    public int[] getPlayerBulletX() { return playerBulletX; }
-    public int[] getPlayerBulletY() { return playerBulletY; }
-    public int getMaxPlayerBullets() { return MAX_PLAYER_BULLETS; }
-    public int getBulletWidth() { return BULLET_WIDTH; }
-    public int getBulletHeight() { return BULLET_HEIGHT; }
-    
-    public boolean[] getAlienBulletActive() { return alienBulletActive; }
-    public int[] getAlienBulletX() { return alienBulletX; }
-    public int[] getAlienBulletY() { return alienBulletY; }
-    public int getMaxAlienBullets() { return MAX_ALIEN_BULLETS; }
-    
-    public int getScore() { return score; }
-    public int getLives() { return lives; }
-    public boolean isGameOver() { return gameOver; }
-    public boolean isGameWon() { return gameWon; }
-    
-    public int getBoardWidth() { return BOARD_WIDTH; }
-    public int getBoardHeight() { return BOARD_HEIGHT; }
-    
+    public int getPlayerX() {
+        return playerX;
+    }
+
+    public int getPlayerY() {
+        return playerY;
+    }
+
+    public int getPlayerWidth() {
+        return PLAYER_WIDTH;
+    }
+
+    public int getPlayerHeight() {
+        return PLAYER_HEIGHT;
+    }
+
+    public boolean[][] getAliens() {
+        return aliens;
+    }
+
+    public int getAlienWidth() {
+        return ALIEN_WIDTH;
+    }
+
+    public int getAlienHeight() {
+        return ALIEN_HEIGHT;
+    }
+
+    public int getAlienDirection() {
+        return alienDirection;
+    }
+
+    public int getAlienY() {
+        return alienY;
+    }
+
+    public int getAlienMinX() {
+        return alienMinX;
+    }
+
+    public boolean[] getPlayerBulletActive() {
+        return playerBulletActive;
+    }
+
+    public int[] getPlayerBulletX() {
+        return playerBulletX;
+    }
+
+    public int[] getPlayerBulletY() {
+        return playerBulletY;
+    }
+
+    public int getMaxPlayerBullets() {
+        return MAX_PLAYER_BULLETS;
+    }
+
+    public int getBulletWidth() {
+        return BULLET_WIDTH;
+    }
+
+    public int getBulletHeight() {
+        return BULLET_HEIGHT;
+    }
+
+    public boolean[] getAlienBulletActive() {
+        return alienBulletActive;
+    }
+
+    public int[] getAlienBulletX() {
+        return alienBulletX;
+    }
+
+    public int[] getAlienBulletY() {
+        return alienBulletY;
+    }
+
+    public int getMaxAlienBullets() {
+        return MAX_ALIEN_BULLETS;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public int getLives() {
+        return lives;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public boolean isGameWon() {
+        return gameWon;
+    }
+
+    public int getBoardWidth() {
+        return BOARD_WIDTH;
+    }
+
+    public int getBoardHeight() {
+        return BOARD_HEIGHT;
+    }
+
     // ==================== Shield Getters ====================
-    public int getNumShields() { return NUM_SHIELDS; }
-    public int[] getShieldX() { return shieldX; }
-    public int[] getShieldY() { return shieldY; }
-    public int[] getShieldWidth() { return shieldWidth; }
-    public int[] getShieldHeight() { return shieldHeight; }
-    public int[] getShieldHealth() { return shieldHealth; }
-    
+    public int getNumShields() {
+        return NUM_SHIELDS;
+    }
+
+    public int[] getShieldX() {
+        return shieldX;
+    }
+
+    public int[] getShieldY() {
+        return shieldY;
+    }
+
+    public int[] getShieldWidth() {
+        return shieldWidth;
+    }
+
+    public int[] getShieldHeight() {
+        return shieldHeight;
+    }
+
+    public int[] getShieldHealth() {
+        return shieldHealth;
+    }
+
     // ==================== Timer Interval ====================
     /**
      * Returns the recommended timer interval in milliseconds.
      * Decreases as more aliens are destroyed, making the game faster.
      */
     public int getTimerInterval() {
-        int interval = (int)(BASE_TIMER_INTERVAL * Math.pow(SPEED_INCREASE_FACTOR, aliensDestroyed));
+        int interval = (int) (BASE_TIMER_INTERVAL * Math.pow(SPEED_INCREASE_FACTOR, aliensDestroyed));
         return Math.max(interval, MIN_TIMER_INTERVAL);
     }
 }
