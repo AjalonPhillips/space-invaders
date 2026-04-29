@@ -18,6 +18,8 @@ public class ModelTester {
         testInitialState();
         testPlayerMovement();
         testBulletFiring();
+        testAlienDestruction();
+        testGameOver();
         
         System.out.println("\n=== Results ===");
         System.out.println("PASS: " + passCount);
@@ -228,5 +230,57 @@ public class ModelTester {
         model.firePlayerBullet();             // fire again while one is in flight
         check("cannot fire a second bullet",  model.isPlayerBulletActive());
         // (this is a weak check — we want exactly one bullet, not two)
+    }
+    static void testAlienDestruction() {
+        GameModel model = new GameModel();
+        
+        // Count initial aliens
+        int before = 0;
+        boolean[][] aliens = model.getAliens();
+        for (int row = 0; row < aliens.length; row++) {
+            for (int col = 0; col < aliens[row].length; col++) {
+                if (aliens[row][col]) before++;
+            }
+        }
+        
+        // Fire bullet and update until we hit an alien
+        int initialScore = model.getScore();
+        model.firePlayerBullet();
+        
+        boolean hitAlien = false;
+        for (int i = 0; i < 200; i++) {
+            model.update();
+            int after = 0;
+            aliens = model.getAliens();
+            for (int row = 0; row < aliens.length; row++) {
+                for (int col = 0; col < aliens[row].length; col++) {
+                    if (aliens[row][col]) after++;
+                }
+            }
+            if (after < before) {
+                hitAlien = true;
+                break;
+            }
+        }
+        
+        check("alien count decreases on hit", hitAlien);
+        check("score increases on hit", model.getScore() > initialScore);
+    }
+    
+    static void testGameOver() {
+        GameModel model = new GameModel();
+        
+        // Directly set all aliens to destroyed (simulating hits)
+        boolean[][] aliens = model.getAliens();
+        for (int row = 0; row < aliens.length; row++) {
+            for (int col = 0; col < aliens[row].length; col++) {
+                aliens[row][col] = false;
+            }
+        }
+        
+        // Call checkWinCondition to trigger the gameWon check
+        model.checkWinCondition();
+        
+        check("game over when all aliens gone", model.isGameWon());
     }
 }

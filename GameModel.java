@@ -325,7 +325,7 @@ public class GameModel {
     }
     
     // ==================== Win/Lose Conditions ====================
-    private void checkWinCondition() {
+    public void checkWinCondition() {
         boolean anyAliensLeft = false;
         for (int row = 0; row < ALIEN_ROWS; row++) {
             for (int col = 0; col < ALIEN_COLS; col++) {
