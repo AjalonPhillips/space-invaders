@@ -213,7 +213,7 @@ public class GameView extends JPanel {
     // Helper methods to calculate alien positions (same as model)
     private int getAlienX(int col) {
         int padding = 15;
-        return padding + col * (model.getAlienWidth() + padding);
+        return model.getAlienMinX() + col * (model.getAlienWidth() + padding);
     }
     
     private int getAlienY(int row) {

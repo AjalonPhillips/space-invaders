@@ -157,15 +157,17 @@ public class GameModel {
     
     // ==================== Alien Movement ====================
     private boolean shouldAliensMoveDown() {
-        // Check if any alien has reached the edge
+        // Check if any alien has reached the screen edge
         for (int row = 0; row < ALIEN_ROWS; row++) {
             for (int col = 0; col < ALIEN_COLS; col++) {
                 if (aliens[row][col]) {
                     int alienX = getAlienX(col);
-                    if (alienDirection == 1 && alienX >= alienMaxX) {
+                    // Check right edge of screen
+                    if (alienDirection == 1 && alienX + ALIEN_WIDTH >= BOARD_WIDTH) {
                         return true;
                     }
-                    if (alienDirection == -1 && alienX <= alienMinX) {
+                    // Check left edge of screen
+                    if (alienDirection == -1 && alienX <= 0) {
                         return true;
                     }
                 }
@@ -185,6 +187,16 @@ public class GameModel {
             int currentSpeed = (int)(ALIEN_SPEED * speedMultiplier);
             alienMinX += alienDirection * currentSpeed;
             alienMaxX += alienDirection * currentSpeed;
+            
+            // Clamp to screen bounds
+            if (alienMinX < 0) {
+                alienMinX = 0;
+                alienMaxX = alienMinX + BOARD_WIDTH - ALIEN_PADDING * 2 - ALIEN_WIDTH;
+            }
+            if (alienMaxX > BOARD_WIDTH - ALIEN_WIDTH) {
+                alienMaxX = BOARD_WIDTH - ALIEN_WIDTH;
+                alienMinX = alienMaxX - (BOARD_WIDTH - ALIEN_PADDING * 2 - ALIEN_WIDTH);
+            }
         }
     }
     
@@ -355,7 +367,7 @@ public class GameModel {
     
     // ==================== Helper Methods ====================
     private int getAlienX(int col) {
-        return ALIEN_PADDING + col * (ALIEN_WIDTH + ALIEN_PADDING);
+        return alienMinX + col * (ALIEN_WIDTH + ALIEN_PADDING);
     }
     
     private int getAlienY(int row) {
@@ -373,6 +385,7 @@ public class GameModel {
     public int getAlienHeight() { return ALIEN_HEIGHT; }
     public int getAlienDirection() { return alienDirection; }
     public int getAlienY() { return alienY; }
+    public int getAlienMinX() { return alienMinX; }
     
     public boolean isPlayerBulletActive() { return playerBulletActive; }
     public int getPlayerBulletX() { return playerBulletX; }

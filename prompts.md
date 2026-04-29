@@ -27,3 +27,14 @@ In modelTester.java, how can I fix some of these errors starting on line 192?
 
 Prompt 10 
 Can you add movement to the aliens? They should move side to until they hit the side border which then causes them to move down towards the player. They should also move gaster the closer they get to the bottom of the screen.
+
+Prompt 11 - trouble shooting
+I asked for movement of the aliens. The aliens move right and contine to move right without stopping. 
+
+Prompt to fix
+The aliens continuously go right until they are out of the screen. I want them to hit the same border that restricts the player then move down and go left then repeat.
+
+Prompt 12
+Can you add a restart option at the end of every game?
+
+Prompt 13
