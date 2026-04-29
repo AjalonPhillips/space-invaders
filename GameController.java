@@ -44,12 +44,13 @@ public class GameController implements ActionListener, KeyListener {
         // Create and configure the JFrame
         frame = new JFrame("Space Invaders");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(model.getBoardWidth(), model.getBoardHeight());
         
-        // Add view to frame and enable key listening
-        JPanel contentPane = new JPanel();
-        contentPane.add(view);
-        frame.setContentPane(contentPane);
+        // Set view as content pane directly (no wrapper panel)
+        frame.setContentPane(view);
+        frame.setResizable(false);
+        
+        // Pack to get proper size based on view's preferred size
+        frame.pack();
         
         view.setFocusable(true);
         view.addKeyListener(this);

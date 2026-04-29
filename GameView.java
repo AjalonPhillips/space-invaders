@@ -1,5 +1,6 @@
 import javax.swing.JPanel;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 
@@ -37,6 +38,11 @@ public class GameView extends JPanel {
     public GameView(GameModel model) {
         this.model = model;
         setBackground(BACKGROUND_COLOR);
+    }
+    
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(model.getBoardWidth(), model.getBoardHeight());
     }
     
     @Override
@@ -212,6 +218,6 @@ public class GameView extends JPanel {
     
     private int getAlienY(int row) {
         int padding = 15;
-        return padding + row * (model.getAlienHeight() + padding) + 50; // +50 for top margin
+        return model.getAlienY() + row * (model.getAlienHeight() + padding);
     }
 }

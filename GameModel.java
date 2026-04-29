@@ -32,7 +32,7 @@ public class GameModel {
     private static final int BASE_TIMER_INTERVAL = 50; // Base interval in ms
     private static final int MIN_TIMER_INTERVAL = 10; // Fastest interval
     private static final double SPEED_INCREASE_FACTOR = 0.95; // Multiply interval by this each alien hit
-    
+    private static final int ALIEN_VERTICAL_MARGIN = 50; // Top margin for alien formation    
     // ==================== Shields ====================
     private static final int NUM_SHIELDS = 4;
     private static final int SHIELD_WIDTH = 60;
@@ -55,6 +55,7 @@ public class GameModel {
     private int alienDirection; // 1 = right, -1 = left
     private int alienMinX;
     private int alienMaxX;
+    private int alienY; // Vertical position of the alien formation
     private int aliensDestroyed = 0; // Track for speed increase
     
     // ==================== Player Bullet ====================
@@ -96,6 +97,7 @@ public class GameModel {
         alienDirection = 1;
         alienMinX = ALIEN_PADDING;
         alienMaxX = BOARD_WIDTH - ALIEN_PADDING - ALIEN_WIDTH;
+        alienY = ALIEN_VERTICAL_MARGIN;
         
         // Initialize player bullet (inactive)
         playerBulletActive = false;
@@ -175,16 +177,14 @@ public class GameModel {
     private void moveAliens() {
         if (shouldAliensMoveDown()) {
             alienDirection *= -1; // Reverse direction
-            // Move all aliens down
-            for (int row = 0; row < ALIEN_ROWS; row++) {
-                for (int col = 0; col < ALIEN_COLS; col++) {
-                    // Aliens are stored as grid, position calculated from grid
-                    // The "Y" position is implicit from row, but we track formation state
-                }
-            }
+            alienY += ALIEN_DROP; // Move all aliens down
         } else {
-            // Move aliens horizontally (direction stored in alienDirection)
-            // Actual position calculated from col * spacing + direction * speed
+            // Move aliens horizontally based on direction and speed
+            // Speed increases as aliens get closer to the bottom
+            double speedMultiplier = 1.0 + (alienY / (double)BOARD_HEIGHT) * 2;
+            int currentSpeed = (int)(ALIEN_SPEED * speedMultiplier);
+            alienMinX += alienDirection * currentSpeed;
+            alienMaxX += alienDirection * currentSpeed;
         }
     }
     
@@ -359,7 +359,7 @@ public class GameModel {
     }
     
     private int getAlienY(int row) {
-        return ALIEN_PADDING + row * (ALIEN_HEIGHT + ALIEN_PADDING) + 50; // +50 for top margin
+        return alienY + row * (ALIEN_HEIGHT + ALIEN_PADDING);
     }
     
     // ==================== Getters ====================
@@ -372,6 +372,7 @@ public class GameModel {
     public int getAlienWidth() { return ALIEN_WIDTH; }
     public int getAlienHeight() { return ALIEN_HEIGHT; }
     public int getAlienDirection() { return alienDirection; }
+    public int getAlienY() { return alienY; }
     
     public boolean isPlayerBulletActive() { return playerBulletActive; }
     public int getPlayerBulletX() { return playerBulletX; }

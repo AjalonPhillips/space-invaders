@@ -24,3 +24,6 @@ In GameModel.java, increase the alien movement speed each time an alien is destr
 
 Prompt 9 
 In modelTester.java, how can I fix some of these errors starting on line 192?
+
+Prompt 10 
+Can you add movement to the aliens? They should move side to until they hit the side border which then causes them to move down towards the player. They should also move gaster the closer they get to the bottom of the screen.
